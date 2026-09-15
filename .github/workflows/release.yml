@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
+
+      - name: Verify tag matches application version
+        shell: pwsh
+        run: |
+          $version = python -c "from app_metadata import APP_VERSION; print(APP_VERSION)"
+          if ("v$version" -ne $env:GITHUB_REF_NAME) {
+            throw "Tag $env:GITHUB_REF_NAME does not match app version $version"
+          }
+
+      - name: Verify source
+        run: |
+          python -m ruff check .
+          python -m ruff format --check .
+          python -m pytest -q
+          python -m pip_audit -r requirements.txt
+
+      - name: Build release
+        run: python packaging/build_release.py
+
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          $key = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+          $before = (Get-ItemProperty -Path $key -Name CodexIndicator -ErrorAction SilentlyContinue).CodexIndicator
+          $process = Start-Process `
+            -FilePath ".\work\release-build\app-dist\CodexIndicator.exe" `
+            -ArgumentList "--smoke-test" `
+            -Wait `
+            -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "Packaged smoke test failed with exit code $($process.ExitCode)"
+          }
+          $after = (Get-ItemProperty -Path $key -Name CodexIndicator -ErrorAction SilentlyContinue).CodexIndicator
+          if ($before -ne $after) {
+            throw "Smoke test changed the Windows startup entry"
+          }
+
+      - name: Attest release provenance
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: |
+            release/CodexIndicatorSetup.exe
+            release/CodexIndicator-Windows-x64.zip
+            release/SHA256SUMS.txt
+            release/release-manifest.json
+
+      - name: Publish early-preview release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME `
+            .\release\CodexIndicatorSetup.exe `
+            .\release\CodexIndicator-Windows-x64.zip `
+            .\release\SHA256SUMS.txt `
+            .\release\release-manifest.json `
+            --prerelease `
+            --generate-notes `
+            --title "Codex Indicator $env:GITHUB_REF_NAME (Early Preview)"
