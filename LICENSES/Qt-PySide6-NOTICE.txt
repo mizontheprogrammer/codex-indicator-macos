@@ -1,0 +1,26 @@
+Qt for Python / PySide6 / Shiboken6 notice
+==========================================
+
+Codex Indicator uses PySide6 and Shiboken6 6.11.1 under the GNU Lesser
+General Public License version 3.0 option.
+
+Copyright (C) The Qt Company Ltd. and other contributors.
+
+Official project and source:
+https://code.qt.io/cgit/pyside/pyside-setup.git/
+
+Qt for Python license documentation:
+https://doc.qt.io/qtforpython-6/licenses.html
+
+Complete GNU Lesser General Public License version 3.0 text:
+LGPL-3.0.txt
+
+Complete GNU General Public License version 3.0 text, whose terms are
+incorporated by LGPL version 3.0:
+GPL-3.0.txt
+
+The complete Codex Indicator source and its PyInstaller build script accompany
+the binary release in the public repository. Recipients may rebuild the
+application against a compatible or modified Qt for Python installation.
+Nothing in the Codex Indicator license restricts reverse engineering needed to
+debug modifications to the LGPL-covered libraries.
