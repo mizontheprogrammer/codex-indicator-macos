@@ -1,0 +1,55 @@
+name: Windows beta feedback
+description: Report real-world behavior without sharing private Codex content.
+title: "[Beta]: "
+labels: ["beta-feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for testing Codex Indicator. Do not paste conversations,
+        credentials, private source code, or raw Codex session files.
+  - type: input
+    id: version
+    attributes:
+      label: Codex Indicator version
+      placeholder: "1.0.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows version
+      options:
+        - Windows 11
+        - Windows 10
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installation type
+      options:
+        - Installer
+        - Portable ZIP
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Include expected and actual status, sound, usage, or startup behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: resources
+    attributes:
+      label: Optional performance observations
+      description: Startup time, CPU, memory, number of sessions, or number of recent log files.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I removed private code, prompts, credentials, and workspace paths.
+          required: true
