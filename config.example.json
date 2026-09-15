@@ -1,0 +1,128 @@
+{
+  "auto_hide_enabled": false,
+  "animations": {
+    "enabled": true,
+    "fade_duration_ms": 180,
+    "layout_duration_ms": 220,
+    "position_save_debounce_ms": 450,
+    "pulse_period_ms": 1400,
+    "respect_reduce_motion": true,
+    "spark_period_ms": 1100
+  },
+  "colors": {
+    "background": "#FCFBF8FA",
+    "border": "#D8D3CB",
+    "needs_you": "#D89B16",
+    "primary_text": "#24211E",
+    "ready": "#2FAF72",
+    "secondary_text": "#77716A",
+    "shadow": "#19120C2E",
+    "working": "#4F7DE8"
+  },
+  "display_size": "compact",
+  "display_mode": "normal",
+  "low_opacity": 0.15,
+  "hide_on_processes": [
+    "Code.exe",
+    "Cursor.exe",
+    "WindowsTerminal.exe",
+    "powershell.exe",
+    "pwsh.exe",
+    "cmd.exe",
+    "codex.exe"
+  ],
+  "monitoring_enabled": true,
+  "notifications_enabled": true,
+  "launch_at_login": false,
+  "poll_interval_ms": 250,
+  "position": {
+    "mode": "automatic",
+    "screen_name": "",
+    "x": null,
+    "y": null
+  },
+  "providers": {
+    "hooks": {
+      "enabled": false,
+      "queue_limit": 1024
+    },
+    "ipc": {
+      "directory": "runtime/sessions",
+      "enabled": true
+    },
+    "logs": {
+      "enabled": true,
+      "encoding": "utf-8",
+      "maximum_file_age_seconds": 86400.0,
+      "needs_you_patterns": [
+        "\\b(permission|approval) (required|requested|needed)\\b",
+        "\\bconfirm(ation)? required\\b",
+        "\\binput required\\b",
+        "\\bcontinue\\?\\s*$",
+        "\\b(do|would|could|can|should|may) you (want|like|prefer|allow|approve|confirm|choose)\\b",
+        "\\bplease (reply|respond|choose|select|confirm|approve|allow)\\b",
+        "\\b(access|connect to|use) (the )?(network|internet|wi-?fi)\\b"
+      ],
+      "paths": [
+        "~/.codex/sessions/*/*/*/rollout-*.jsonl",
+        "~/.codex/log/codex-tui.log",
+        "~/.codex/logs/*.log",
+        "~/.codex/log/*.log"
+      ],
+      "ready_patterns": [
+        "\\bwaiting for (input|prompt)\\b",
+        "\\bturn completed\\b",
+        "\\bidle\\b"
+      ],
+      "start_at_end": false,
+      "working_patterns": [
+        "\\b(thinking|reasoning|planning|searching)\\b",
+        "\\b(reading|writing|editing|running|analyzing)\\b"
+      ]
+    },
+    "stream": {
+      "enabled": false,
+      "maximum_line_bytes": 1048576
+    }
+  },
+  "schema_version": 3,
+  "sounds": {
+    "alias": "SystemExclamation",
+    "enabled": true,
+    "minimum_interval_seconds": 3.0
+  },
+  "theme": {
+    "corner_radius": 24,
+    "font_family": ".AppleSystemUIFont",
+    "height": 48,
+    "name": "porcelain",
+    "opacity": 0.98,
+    "outer_padding": 4,
+    "row_height": 48,
+    "row_spacing": 3,
+    "use_acrylic": false,
+    "width": 300
+  },
+  "timeouts": {
+    "dead_process_grace_seconds": 5.0,
+    "provider_retry_initial_seconds": 1.0,
+    "provider_retry_max_seconds": 30.0,
+    "remove_after_seconds": 300.0,
+    "stale_after_seconds": 20.0
+  },
+  "working_labels": [
+    "Thinking...",
+    "Reasoning...",
+    "Planning...",
+    "Searching...",
+    "Reading Files...",
+    "Writing Code...",
+    "Editing...",
+    "Refactoring...",
+    "Debugging...",
+    "Running Tests...",
+    "Generating...",
+    "Analyzing...",
+    "Optimizing..."
+  ]
+}

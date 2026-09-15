@@ -1,0 +1,82 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Build and packaging output
+build/
+work/
+dist/
+release/
+/CodexIndicatorSetup.exe
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.code-workspace
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Qt-generated files
+*.qmlc
+*.jsc
+*.qm
+.qmake.stash
+
+# Installer and local upgrade artifacts
+*.bak
+*.backup
+*.lnk
+config.json
+config.local.json
+config.json.bak*
+uninstall-manifest.json
+
+# Optional locally licensed notification audio. The application falls back to
+# the Windows system alert when this file is absent.
+assets/notification.mp3
+assets/codex_indicator_logo_source.png
+
+# Runtime data (directory placeholders remain tracked)
+runtime/*
+!runtime/.gitkeep
+!runtime/sessions/
+runtime/sessions/*
+!runtime/sessions/.gitkeep
+
+# Logs, crash reports, and temporary files
+*.log
+*.dmp
+*.tmp
+*.temp
+*.pid
+*.lock
+~$*
+
+# Test and diagnostic output
+test-results/
+screenshots/actual/
+screenshots/diff/
