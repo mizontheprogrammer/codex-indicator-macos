@@ -21,6 +21,8 @@
   },
   "display_size": "compact",
   "display_mode": "normal",
+  "hide_in_notch": true,
+  "hover_hide_delay_ms": 650,
   "low_opacity": 0.15,
   "hide_on_processes": [
     "Code.exe",
@@ -85,7 +87,7 @@
       "maximum_line_bytes": 1048576
     }
   },
-  "schema_version": 3,
+  "schema_version": 4,
   "sounds": {
     "alias": "SystemExclamation",
     "enabled": true,
