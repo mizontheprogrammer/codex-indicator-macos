@@ -589,7 +589,7 @@ class ProviderSettings:
 class AppConfig:
     """Complete validated application configuration."""
 
-    CURRENT_SCHEMA_VERSION = 3
+    CURRENT_SCHEMA_VERSION = 4
 
     schema_version: int = CURRENT_SCHEMA_VERSION
     poll_interval_ms: int = 250
@@ -599,6 +599,8 @@ class AppConfig:
     launch_at_login: bool = False
     display_size: str = "compact"
     display_mode: str = "normal"
+    hide_in_notch: bool = True
+    hover_hide_delay_ms: int = 650
     low_opacity: float = 0.15
     hide_on_processes: tuple[str, ...] = DEFAULT_HIDE_ON_PROCESSES
     working_labels: tuple[str, ...] = DEFAULT_WORKING_LABELS
@@ -654,6 +656,16 @@ class AppConfig:
                 data.get("display_mode"),
                 defaults.display_mode,
                 {"normal", "low_opacity", "notifications_only"},
+            ),
+            hide_in_notch=_boolean(
+                data.get("hide_in_notch"),
+                defaults.hide_in_notch,
+            ),
+            hover_hide_delay_ms=_integer(
+                data.get("hover_hide_delay_ms"),
+                defaults.hover_hide_delay_ms,
+                100,
+                5_000,
             ),
             low_opacity=_number(
                 data.get("low_opacity"),
