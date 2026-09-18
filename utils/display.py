@@ -38,6 +38,31 @@ def top_center_position(
     return x, y
 
 
+def has_camera_notch(
+    full: DisplayGeometry,
+    available: DisplayGeometry,
+    *,
+    minimum_top_inset: int = 32,
+) -> bool:
+    """Infer a MacBook camera notch from the public visible-frame inset."""
+
+    top_inset = available.y - full.y
+    same_horizontal_frame = (
+        full.x == available.x and full.width == available.width
+    )
+    return same_horizontal_frame and top_inset >= minimum_top_inset
+
+
+def island_position(
+    full: DisplayGeometry,
+    overlay_width: int,
+) -> tuple[int, int]:
+    """Center a top-attached island in a display's full logical frame."""
+
+    width = max(1, min(overlay_width, full.width))
+    return full.x + (full.width - width) // 2, full.y
+
+
 def clamp_position(
     display: DisplayGeometry,
     x: int,
@@ -55,4 +80,10 @@ def clamp_position(
     )
 
 
-__all__ = ["DisplayGeometry", "clamp_position", "top_center_position"]
+__all__ = [
+    "DisplayGeometry",
+    "clamp_position",
+    "has_camera_notch",
+    "island_position",
+    "top_center_position",
+]
