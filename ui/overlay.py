@@ -7,6 +7,7 @@ from PySide6.QtCore import (
     QEvent,
     QPoint,
     QPropertyAnimation,
+    QRect,
     QRectF,
     Qt,
     QTimer,
@@ -22,7 +23,13 @@ from ui.animations import AnimationClock
 from ui.painter import OverlayPainter
 from ui.palette import IndicatorPalette
 from ui.progress import usage_presentation
-from utils.display import DisplayGeometry, clamp_position, top_center_position
+from utils.display import (
+    DisplayGeometry,
+    clamp_position,
+    has_camera_notch,
+    island_position,
+    top_center_position,
+)
 from utils.platform import (
     PlatformKind,
     apply_overlay_window_behavior,
@@ -57,6 +64,7 @@ class IndicatorOverlay(QWidget):
         self._manually_hidden = False
         self._manual_reveal_active = False
         self._expanded = False
+        self._hover_revealed = not self._hover_reveal_enabled()
         self._ready_labels: set[str] = set()
         self._count_rect: QRectF | None = None
         self._native_behavior_applied = False
@@ -105,6 +113,15 @@ class IndicatorOverlay(QWidget):
         self._ready_label_timer.setInterval(2_500)
         self._ready_label_timer.timeout.connect(self._clear_ready_labels)
 
+        self._hover_leave_timer = QTimer(self)
+        self._hover_leave_timer.setSingleShot(True)
+        self._hover_leave_timer.setInterval(config.hover_hide_delay_ms)
+        self._hover_leave_timer.timeout.connect(self._hide_in_notch)
+
+        self._layout_animation = QPropertyAnimation(self, b"geometry", self)
+        self._layout_animation.setDuration(config.animations.layout_duration_ms)
+        self._layout_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+
         self._fade = QPropertyAnimation(self, b"windowOpacity", self)
         self._fade.setDuration(config.animations.fade_duration_ms)
         self._fade.setEasingCurve(QEasingCurve.Type.OutCubic)
@@ -118,6 +135,33 @@ class IndicatorOverlay(QWidget):
             for screen in application.screens():
                 self._connect_screen(screen)
         self._resize_for_rows()
+
+    def _hover_reveal_enabled(self) -> bool:
+        return (
+            current_platform() is PlatformKind.MACOS
+            and self.config.hide_in_notch
+            and self.config.position.mode == "automatic"
+        )
+
+    def enterEvent(self, event: object) -> None:
+        self._hover_leave_timer.stop()
+        if self._hover_reveal_enabled() and not self._hover_revealed:
+            self._hover_revealed = True
+            self._apply_automatic_geometry(animated=True)
+            self.update()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event: object) -> None:
+        if self._hover_reveal_enabled() and not self._expanded:
+            self._hover_leave_timer.start(self.config.hover_hide_delay_ms)
+        super().leaveEvent(event)
+
+    def _hide_in_notch(self) -> None:
+        if not self._hover_reveal_enabled() or self._expanded or self.underMouse():
+            return
+        self._hover_revealed = False
+        self._apply_automatic_geometry(animated=True)
+        self.update()
 
     def showEvent(self, event: object) -> None:
         super().showEvent(event)
@@ -168,6 +212,7 @@ class IndicatorOverlay(QWidget):
     def apply_config(self, config: AppConfig) -> None:
         """Apply visual and behavioral settings without restarting."""
 
+        hover_was_enabled = self._hover_reveal_enabled()
         self.config = config
         self.palette = IndicatorPalette.from_settings(config.colors)
         self.renderer = OverlayPainter(config, self.palette)
@@ -188,9 +233,15 @@ class IndicatorOverlay(QWidget):
             self._clock.stop()
         self._visibility_timer.setInterval(config.poll_interval_ms)
         self._fade.setDuration(config.animations.fade_duration_ms)
+        self._hover_leave_timer.setInterval(config.hover_hide_delay_ms)
+        self._layout_animation.setDuration(config.animations.layout_duration_ms)
         if config.display_mode != "notifications_only":
             self._manual_reveal_active = False
             self._manual_reveal_timer.stop()
+        if not self._hover_reveal_enabled():
+            self._hover_revealed = True
+        elif not hover_was_enabled and not self.underMouse():
+            self._hover_revealed = False
         self._resize_for_rows()
         self.setWindowOpacity(self.target_opacity())
         self.update()
@@ -230,6 +281,11 @@ class IndicatorOverlay(QWidget):
             self._manual_reveal_active = True
             self._manual_reveal_timer.start(max(1_000, duration_ms))
         self._set_wanted_visible(True)
+        if self._hover_reveal_enabled():
+            self._hover_revealed = True
+            self._apply_automatic_geometry(animated=True)
+            self._hover_leave_timer.start(max(1_000, duration_ms))
+            self.update()
         self.raise_()
 
     def _end_manual_reveal(self) -> None:
@@ -254,10 +310,11 @@ class IndicatorOverlay(QWidget):
             + max(0, count - 1) * self.config.theme.row_spacing
         )
         height = max(self.config.theme.height, content_height) + 12
-        self.resize(self.config.theme.width, height)
+        self._expanded_height = height
         if self.config.position.mode == "automatic":
-            self._move_automatic()
+            self._apply_automatic_geometry(animated=False)
         else:
+            self.resize(self.config.theme.width, height)
             self._clamp_to_screen()
 
     @staticmethod
@@ -301,14 +358,39 @@ class IndicatorOverlay(QWidget):
         del event
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        island_mode = self._hover_reveal_enabled()
+        if island_mode and not self._hover_revealed:
+            surface = QRectF(
+                0,
+                -self.config.theme.corner_radius,
+                self.width(),
+                self.height() + self.config.theme.corner_radius,
+            )
+            self.renderer.draw_surface(painter, surface)
+            self._row_rects.clear()
+            self._count_rect = None
+            return
         padding = (
             0
             if current_platform() is PlatformKind.MACOS
             else self.config.theme.outer_padding
         )
-        surface = QRectF(6, 6, self.width() - 12, self.height() - 12)
+        surface = (
+            QRectF(
+                0,
+                -self.config.theme.corner_radius,
+                self.width(),
+                self.height() + self.config.theme.corner_radius - 2,
+            )
+            if island_mode
+            else QRectF(6, 6, self.width() - 12, self.height() - 12)
+        )
         self.renderer.draw_surface(painter, surface)
-        content = surface.adjusted(padding, padding, -padding, -padding)
+        content = (
+            QRectF(6, 10, self.width() - 12, self.height() - 12)
+            if island_mode
+            else surface.adjusted(padding, padding, -padding, -padding)
+        )
         self._row_rects.clear()
         self._count_rect = None
         if not self.snapshot.sessions:
@@ -390,6 +472,7 @@ class IndicatorOverlay(QWidget):
             )
         elif self._pressed_count:
             self._expanded = not self._expanded
+            self._hover_revealed = True
             self._resize_for_rows()
             self.update()
         elif self._pressed_session is not None:
@@ -436,18 +519,72 @@ class IndicatorOverlay(QWidget):
         screen = QApplication.screenAt(QCursor.pos()) or QApplication.primaryScreen()
         if screen is None:
             return
-        x, y = top_center_position(
-            self._display_geometry(screen),
-            self.width(),
-            self.height(),
-            safe_gap=6,
+        self._apply_automatic_geometry(screen=screen, animated=False)
+        self._last_auto_screen = screen.name()
+
+    def _apply_automatic_geometry(
+        self,
+        *,
+        screen: QScreen | None = None,
+        animated: bool,
+    ) -> None:
+        screen = screen or self.screen() or QApplication.primaryScreen()
+        if screen is None:
+            return
+        if self._hover_reveal_enabled():
+            full = self._full_display_geometry(screen)
+            available = self._display_geometry(screen)
+            if self._hover_revealed:
+                width = self.config.theme.width
+                height = self._expanded_height
+            elif has_camera_notch(full, available):
+                width = 176
+                height = min(34, max(28, available.y - full.y))
+            else:
+                width = 96
+                height = 12
+            x, y = island_position(full, width)
+        else:
+            width = self.config.theme.width
+            height = self._expanded_height
+            x, y = top_center_position(
+                self._display_geometry(screen),
+                width,
+                height,
+                safe_gap=6,
+            )
+        target = QRect(x, y, width, height)
+        can_animate = (
+            animated
+            and self.config.animations.enabled
+            and not (
+                self.config.animations.respect_reduce_motion
+                and reduce_motion_enabled()
+            )
         )
-        self.move(x, y)
+        self._layout_animation.stop()
+        if can_animate:
+            self._layout_animation.setStartValue(self.geometry())
+            self._layout_animation.setEndValue(target)
+            self._layout_animation.start()
+        else:
+            self.setGeometry(target)
         self._last_auto_screen = screen.name()
 
     @staticmethod
     def _display_geometry(screen: QScreen) -> DisplayGeometry:
         area = screen.availableGeometry()
+        return DisplayGeometry(
+            name=screen.name(),
+            x=area.x(),
+            y=area.y(),
+            width=area.width(),
+            height=area.height(),
+        )
+
+    @staticmethod
+    def _full_display_geometry(screen: QScreen) -> DisplayGeometry:
+        area = screen.geometry()
         return DisplayGeometry(
             name=screen.name(),
             x=area.x(),
