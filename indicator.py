@@ -467,6 +467,15 @@ class IndicatorRuntime(QObject):
             self.display_menu.addAction(action)
             self.display_actions[mode] = action
 
+        self.hide_in_notch_action = QAction(
+            "Hide in MacBook Notch Until Hover",
+            self.display_menu,
+        )
+        self.hide_in_notch_action.setCheckable(True)
+        self.hide_in_notch_action.toggled.connect(self._toggle_hide_in_notch)
+        self.display_menu.addSeparator()
+        self.display_menu.addAction(self.hide_in_notch_action)
+
         self.opacity_menu = self.display_menu.addMenu("Low opacity level")
         self.opacity_group = QActionGroup(self.opacity_menu)
         self.opacity_group.setExclusive(True)
@@ -574,6 +583,9 @@ class IndicatorRuntime(QObject):
         self.mute_notifications_action.blockSignals(False)
         for mode, action in self.display_actions.items():
             action.setChecked(mode == self.config.display_mode)
+        self.hide_in_notch_action.blockSignals(True)
+        self.hide_in_notch_action.setChecked(self.config.hide_in_notch)
+        self.hide_in_notch_action.blockSignals(False)
         for mode, action in self.position_actions.items():
             action.setChecked(mode == self.config.position.mode)
         selected_opacity = min(
@@ -614,6 +626,11 @@ class IndicatorRuntime(QObject):
             display_mode="low_opacity",
             low_opacity=opacity,
         )
+        self._persist_config()
+        self.overlay.apply_config(self.config)
+
+    def _toggle_hide_in_notch(self, checked: bool) -> None:
+        self.config = replace(self.config, hide_in_notch=checked)
         self._persist_config()
         self.overlay.apply_config(self.config)
 
