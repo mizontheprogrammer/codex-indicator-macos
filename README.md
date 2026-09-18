@@ -65,12 +65,18 @@ hidden. Its menu contains Show Indicator, Hide Indicator, Reset Position,
 Refresh Now, Display Mode, Sessions, Usage Details, Notification Sound, Launch
 at Login, application-data/log shortcuts, About, and Quit.
 
-The default indicator is a 300 × 48 point black capsule centered beneath the
-active display's menu-bar/notch safe area. Qt positions it in logical points, so
-Retina scaling does not double its size or coordinates. Display attachment,
-removal, geometry changes, and active-display changes trigger repositioning and
-clamping. **Position → Remember Custom Position** enables drag placement;
-**Reset Position** returns to automatic top center.
+On a notched MacBook, the default indicator retracts into a 176-point black
+hover target aligned with the physical camera notch. Moving the pointer onto the
+notch smoothly widens it into the full status capsule; it retracts 650 ms after
+the pointer leaves. On a display without a notch, a small top-center tab remains
+as the hover target. The behavior can be disabled with **Display Mode → Hide in
+MacBook Notch Until Hover**. **Show Indicator** reveals it for eight seconds.
+
+Qt positions the island in logical points, so Retina scaling does not double its
+size or coordinates. Display attachment, removal, geometry changes, and
+active-display changes trigger repositioning and clamping. **Position → Remember
+Custom Position** enables conventional drag placement and disables notch hiding;
+**Reset Position** returns to the automatic island.
 
 The line and number always describe remaining capacity, never estimated task
 completion:
