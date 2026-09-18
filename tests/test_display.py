@@ -1,4 +1,10 @@
-from utils.display import DisplayGeometry, clamp_position, top_center_position
+from utils.display import (
+    DisplayGeometry,
+    clamp_position,
+    has_camera_notch,
+    island_position,
+    top_center_position,
+)
 
 
 def test_notched_display_uses_visible_frame_below_safe_area() -> None:
@@ -32,3 +38,17 @@ def test_custom_position_restores_and_clamps_after_geometry_change() -> None:
 def test_oversize_panel_is_clamped_to_display_origin() -> None:
     visible = DisplayGeometry("Removed fallback", 100, 50, 200, 100)
     assert clamp_position(visible, -500, 900, 400, 300) == (100, 50)
+
+
+def test_notch_detection_uses_top_safe_inset() -> None:
+    full = DisplayGeometry("Built-in", 0, 0, 1512, 982)
+    notched = DisplayGeometry("Built-in", 0, 38, 1512, 944)
+    ordinary = DisplayGeometry("External", 0, 25, 1512, 957)
+
+    assert has_camera_notch(full, notched)
+    assert not has_camera_notch(full, ordinary)
+
+
+def test_island_attaches_to_full_display_top_center() -> None:
+    full = DisplayGeometry("Built-in", 100, -20, 1512, 982)
+    assert island_position(full, 176) == (768, -20)
