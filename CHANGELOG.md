@@ -2,6 +2,18 @@
 
 All notable changes to Codex Indicator are documented here.
 
+## [1.0.2] - 2026-09-16
+
+### Added
+
+- A notch-aligned idle state that visually disappears into a MacBook camera
+  housing and smoothly expands into the status indicator on pointer hover.
+- Automatic notch inference from the public macOS display safe-area geometry,
+  with a compact top-center fallback tab for external and non-notched displays.
+- A menu-bar preference to enable or disable hover-to-reveal behavior.
+- Reduce Motion-aware island geometry transitions and a delayed retract that
+  keeps the expanded indicator easy to enter and use.
+
 ## [1.0.1] - 2026-07-26
 
 ### Fixed
