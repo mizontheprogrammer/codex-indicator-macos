@@ -57,3 +57,20 @@ def test_removed_custom_display_falls_back_to_automatic() -> None:
     IndicatorOverlay._screen_removed(overlay, object())
 
     assert calls == ["automatic"]
+
+
+def test_hover_leave_collapses_notch_island(qapp, monkeypatch) -> None:
+    config = replace(
+        AppConfig(),
+        animations=replace(AppConfig().animations, enabled=False),
+    )
+    overlay = IndicatorOverlay(config)
+    monkeypatch.setattr(overlay, "_hover_reveal_enabled", lambda: True)
+    monkeypatch.setattr(overlay, "underMouse", lambda: False)
+    overlay._hover_revealed = True
+
+    overlay._hide_in_notch()
+
+    assert not overlay._hover_revealed
+    assert overlay.width() in {96, 176}
+    overlay.close()
