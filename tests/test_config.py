@@ -42,6 +42,8 @@ def test_default_config_file_matches_schema() -> None:
     assert config.animations.respect_reduce_motion is True
     assert config.display_mode == "normal"
     assert config.low_opacity == 0.15
+    assert config.hide_in_notch is True
+    assert config.hover_hide_delay_ms == 650
     assert config.colors.working == "#4F7DE8"
 
 
@@ -81,7 +83,7 @@ def test_windows_config_migrates_without_losing_known_values(tmp_path: Path) -> 
     )
     result = load_config(path)
     assert result.migrated
-    assert result.config.schema_version == 3
+    assert result.config.schema_version == 4
     assert result.config.display_mode == "low_opacity"
     assert result.config.low_opacity == 0.10
     assert result.config.position.x == 410
